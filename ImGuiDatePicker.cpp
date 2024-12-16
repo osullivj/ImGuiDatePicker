@@ -5,15 +5,20 @@
 #include <vector>
 #include <unordered_map>
 
-
+/* No struct tm at Emscripten boundary
 #define GET_DAY(timePoint) int(timePoint.tm_mday)
 #define GET_MONTH_UNSCALED(timePoint) timePoint.tm_mon
 #define GET_MONTH(timePoint) int(GET_MONTH_UNSCALED(timePoint) + 1)
-#define GET_YEAR(timePoint) int(timePoint.tm_year + 1900)
-
+#define GET_YEAR(timePoint) int(timePoint.tm_year + 1900) */
+#define GET_DAY(ymd) ymd[2]
+#define GET_MONTH_IDX(ymd) (ymd[1] - 1)
+#define GET_MONTH(ymd) ymd[1]
+#define GET_YEAR(ymd) ymd[0]
+/*
 #define SET_DAY(timePoint, day) timePoint.tm_mday = day
 #define SET_MONTH(timePoint, month) timePoint.tm_mon = month - 1
 #define SET_YEAR(timePoint, year) timePoint.tm_year = year - 1900
+*/
 
 namespace ImGui
 {
@@ -126,7 +131,7 @@ namespace ImGui
         return res;
     }
 
-    constexpr static tm EncodeTimePoint(int dayOfMonth, int month, int year) noexcept
+    /* constexpr static tm EncodeTimePoint(int dayOfMonth, int month, int year) noexcept
     {
         tm res{ };
         res.tm_isdst = -1;
@@ -135,63 +140,70 @@ namespace ImGui
         SET_YEAR(res, year);
 
         return res;
-    }
+    } */
 
-    inline static std::string TimePointToLongString(const tm& timePoint) noexcept
+    inline static std::string TimePointToLongString(int ymd[3]) noexcept
     {
-        std::string day = std::to_string(GET_DAY(timePoint));
-        std::string month = MONTHS[GET_MONTH_UNSCALED(timePoint)];
-        std::string year = std::to_string(GET_YEAR(timePoint));
+        std::string day = std::to_string(GET_DAY(ymd));
+        std::string month = MONTHS[GET_MONTH_IDX(ymd)];
+        std::string year = std::to_string(GET_YEAR(ymd));
 
         return std::string(day + " " + month + " " + year);
     }
 
-    inline static tm Today() noexcept
+    /* inline static tm Today() noexcept
     {
         std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
         std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
 
         return *std::gmtime(&currentTime);
-    }
+    } */
 
-    inline static tm PreviousMonth(const tm& timePoint) noexcept
+    inline void PreviousMonth(int ymd[3]) noexcept
     {
-        int month = GET_MONTH(timePoint);
-        int year = GET_YEAR(timePoint);
+        int month = GET_MONTH(ymd);
+        int year = GET_YEAR(ymd);
 
         if (month == 1)
         {
-            int newDay = std::min(GET_DAY(timePoint), NumDaysInMonth(12, --year));
-            return EncodeTimePoint(newDay, 12, year);
+            int newDay = std::min(GET_DAY(ymd), NumDaysInMonth(12, --year));
+            ymd[0] = year;
+            ymd[2] = newDay;
+            return;
         }
 
-        int newDay = std::min(GET_DAY(timePoint), NumDaysInMonth(--month, year));
-        return EncodeTimePoint(newDay, month, year);
+        int newDay = std::min(GET_DAY(ymd), NumDaysInMonth(--month, year));
+        ymd[1] = month;
+        ymd[2] = newDay;
+        return;
     }
 
-    inline static tm NextMonth(const tm& timePoint) noexcept
+    inline void NextMonth(int ymd[3]) noexcept
     {
-        int month = GET_MONTH(timePoint);
-        int year = GET_YEAR(timePoint);
+        int month = GET_MONTH(ymd);
+        int year = GET_YEAR(ymd);
 
         if (month == 12)
         {
-            int newDay = std::min(GET_DAY(timePoint), NumDaysInMonth(1, ++year));
-            return EncodeTimePoint(newDay, 1, year);
+            int newDay = std::min(GET_DAY(ymd), NumDaysInMonth(1, ++year));
+            ymd[0] = year;
+            ymd[2] = newDay;
         }
 
-        int newDay = std::min(GET_DAY(timePoint), NumDaysInMonth(++month, year));
-        return EncodeTimePoint(newDay, month, year);
+        int newDay = std::min(GET_DAY(ymd), NumDaysInMonth(++month, year));
+        ymd[1] = month;
+        ymd[2] = newDay;
+        return;
     }
 
-    constexpr static bool IsMinDate(const tm& timePoint) noexcept
+    constexpr static bool IsMinDate(int ymd[3]) noexcept
     {
-        return (GET_MONTH(timePoint) == 1) && (GET_YEAR(timePoint) == IMGUI_DATEPICKER_YEAR_MIN);
+        return (GET_MONTH(ymd) == 1) && (GET_YEAR(ymd) == IMGUI_DATEPICKER_YEAR_MIN);
     }
 
-    constexpr static bool IsMaxDate(const tm& timePoint) noexcept
+    constexpr static bool IsMaxDate(int ymd[3]) noexcept
     {
-        return (GET_MONTH(timePoint) == 12) && (GET_YEAR(timePoint) == IMGUI_DATEPICKER_YEAR_MAX);
+        return (GET_MONTH(ymd) == 12) && (GET_YEAR(ymd) == IMGUI_DATEPICKER_YEAR_MAX);
     }
 
     static bool ComboBox(const std::string& label, const std::vector<std::string>& items, int& v, ImFont* altFont)
@@ -221,7 +233,7 @@ namespace ImGui
         return res;
     }
 
-    bool DatePickerEx(const std::string& label, tm v, ImFont* altFont, bool clampToBorder, float itemSpacing)
+    bool DatePickerEx(const std::string& label, int ymd[3], ImFont* altFont, bool clampToBorder, float itemSpacing)
     {
         bool res = false;
 
@@ -244,16 +256,16 @@ namespace ImGui
         const ImVec2 windowSize = ImVec2(274.5f, 301.5f);
         SetNextWindowSize(windowSize);
 
-        if (BeginCombo(std::string("##" + myLabel).c_str(), TimePointToLongString(v).c_str()))
+        if (BeginCombo(std::string("##" + myLabel).c_str(), TimePointToLongString(ymd).c_str()))
         {
-            int monthIdx = GET_MONTH_UNSCALED(v);
-            int year = GET_YEAR(v);
+            int monthIdx = GET_MONTH_IDX(ymd);
+            int year = GET_YEAR(ymd);
 
             PushItemWidth((GetContentRegionAvail().x * 0.5f));
 
             if (ComboBox("##CmbMonth_" + myLabel, MONTHS, monthIdx, altFont))
             {
-                SET_MONTH(v, monthIdx + 1);
+                ymd[1] = monthIdx + 1;
                 res = true;
             }
 
@@ -263,7 +275,7 @@ namespace ImGui
 
             if (InputInt(std::string("##IntYear_" + myLabel).c_str(), &year))
             {
-                SET_YEAR(v, std::min(std::max(IMGUI_DATEPICKER_YEAR_MIN, year), IMGUI_DATEPICKER_YEAR_MAX));
+                ymd[0] = std::min(std::max(IMGUI_DATEPICKER_YEAR_MIN, year), IMGUI_DATEPICKER_YEAR_MAX);
                 res = true;
             }
 
@@ -281,11 +293,11 @@ namespace ImGui
             PushStyleVar(ImGuiStyleVar_FrameRounding, 20.0f);
             PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
             PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-            BeginDisabled(IsMinDate(v));
+            BeginDisabled(IsMinDate(ymd));
 
             if (ArrowButtonEx(std::string("##ArrowLeft_" + myLabel).c_str(), ImGuiDir_Left, ImVec2(arrowSize, arrowSize)))
             {
-                v = PreviousMonth(v);
+                PreviousMonth(ymd);
                 res = true;
             }
 
@@ -297,8 +309,10 @@ namespace ImGui
 
             if (ButtonEx(std::string("##ArrowMid_" + myLabel).c_str(), ImVec2(bulletSize, bulletSize)))
             {
+                /* TODO: reimplement
                 v = Today();
-                res = true;
+                res = true; */
+                res = false;
                 CloseCurrentPopup();
             }
 
@@ -306,11 +320,11 @@ namespace ImGui
             SameLine();
             PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
             PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-            BeginDisabled(IsMaxDate(v));
+            BeginDisabled(IsMaxDate(ymd));
 
             if (ArrowButtonEx(std::string("##ArrowRight_" + myLabel).c_str(), ImGuiDir_Right, ImVec2(arrowSize, arrowSize)))
             {
-                v = NextMonth(v);
+                NextMonth(ymd);
                 res = true;
             }
 
@@ -349,7 +363,7 @@ namespace ImGui
                         {
                             PushStyleVar(ImGuiStyleVar_FrameRounding, 20.0f);
 
-                            const bool selected = day == GET_DAY(v);
+                            const bool selected = day == GET_DAY(ymd);
                             if (!selected)
                             {
                                 PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
@@ -358,7 +372,7 @@ namespace ImGui
 
                             if (Button(std::to_string(day).c_str(), ImVec2(GetContentRegionAvail().x, GetTextLineHeightWithSpacing() + 5.0f)))
                             {
-                                v = EncodeTimePoint(day, month, year);
+                                ymd[2] = day; // v = EncodeTimePoint(day, month, year);
                                 res = true;
                                 CloseCurrentPopup();
                             }
@@ -386,6 +400,6 @@ namespace ImGui
     // bool DatePicker(const std::string& label, tm& v, bool clampToBorder, float itemSpacing)
     bool DatePicker(const char* label, int ymd[3], bool clampToBorder, float itemSpacing)
     {
-        return DatePickerEx(label, EncodeTimePoint(ymd[2], ymd[1], ymd[0]), nullptr, clampToBorder, itemSpacing);
+        return DatePickerEx(label, ymd, nullptr, clampToBorder, itemSpacing);
     }
 }
