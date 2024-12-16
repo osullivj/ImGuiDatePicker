@@ -221,7 +221,7 @@ namespace ImGui
         return res;
     }
 
-    bool DatePickerEx(const std::string& label, tm& v, ImFont* altFont, bool clampToBorder, float itemSpacing)
+    bool DatePickerEx(const std::string& label, tm v, ImFont* altFont, bool clampToBorder, float itemSpacing)
     {
         bool res = false;
 
@@ -383,8 +383,9 @@ namespace ImGui
         return res;
     }
 
-    bool DatePicker(const std::string& label, tm& v, bool clampToBorder, float itemSpacing)
+    // bool DatePicker(const std::string& label, tm& v, bool clampToBorder, float itemSpacing)
+    bool DatePicker(const char* label, int ymd[3], bool clampToBorder, float itemSpacing)
     {
-        return DatePickerEx(label, v, nullptr, clampToBorder, itemSpacing);
+        return DatePickerEx(label, EncodeTimePoint(ymd[2], ymd[1], ymd[0]), nullptr, clampToBorder, itemSpacing);
     }
 }
