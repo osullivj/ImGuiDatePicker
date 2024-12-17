@@ -13,9 +13,5 @@
 
 namespace ImGui
 {
-    IMGUI_API bool DatePickerEx(const std::string& label, int ymd[3], ImFont* altFont, bool clampToBorder = false, float itemSpacing = 130.0f);
-
-    // IMGUI_API bool DatePicker(const std::string& label, tm& v, bool clampToBorder = false, float itemSpacing = 130.0f);
-    
     IMGUI_API bool DatePicker(const char* label, int ymd[3], bool clampToBorder = false, float itemSpacing = 130.0f);
 }

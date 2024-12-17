@@ -233,9 +233,13 @@ namespace ImGui
         return res;
     }
 
-    bool DatePickerEx(const std::string& label, int ymd[3], ImFont* altFont, bool clampToBorder, float itemSpacing)
+    bool DatePicker(const char* clabel, int ymd[3], bool clampToBorder, float itemSpacing)
     {
         bool res = false;
+        // TODO: emscripten friendly font cfg. We do not want raw obj ptrs in the 
+        // boundary. For the time being we'll default to no font overrides.
+        ImFont* altFont = 0;
+        std::string label( clabel);
 
         ImGuiWindow* window = GetCurrentWindow();
         if (window->SkipItems)
@@ -395,11 +399,5 @@ namespace ImGui
         }
 
         return res;
-    }
-
-    // bool DatePicker(const std::string& label, tm& v, bool clampToBorder, float itemSpacing)
-    bool DatePicker(const char* label, int ymd[3], bool clampToBorder, float itemSpacing)
-    {
-        return DatePickerEx(label, ymd, nullptr, clampToBorder, itemSpacing);
     }
 }
