@@ -233,12 +233,13 @@ namespace ImGui
         return res;
     }
 
-    bool DatePicker(const char* clabel, int ymd[3], bool clampToBorder, float itemSpacing)
+    bool DatePicker(const char* clabel, int ymd[3], float table_size[2], bool clampToBorder, ImGuiTableFlags table_flags)
     {
         bool res = false;
         // TODO: emscripten friendly font cfg. We do not want raw obj ptrs in the 
         // boundary. For the time being we'll default to no font overrides.
         ImFont* altFont = 0;
+        float itemSpacing = 130.0f;
         std::string label( clabel);
 
         ImGuiWindow* window = GetCurrentWindow();
@@ -257,7 +258,7 @@ namespace ImGui
         if (clampToBorder)
             SetNextItemWidth(GetContentRegionAvail().x);
 
-        const ImVec2 windowSize = ImVec2(274.5f, 301.5f);
+        const ImVec2 windowSize = ImVec2(table_size[0], table_size[1]);
         SetNextWindowSize(windowSize);
 
         if (BeginCombo(std::string("##" + myLabel).c_str(), TimePointToLongString(ymd).c_str()))
@@ -336,10 +337,11 @@ namespace ImGui
             PopStyleColor(2);
             PopStyleVar();
 
+            /* now supplied in table_flags param
             constexpr ImGuiTableFlags TABLE_FLAGS = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingFixedFit |
-                ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_NoHostExtendY;
+                ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_NoHostExtendY; */
 
-            if (BeginTable(std::string("##Table_" + myLabel).c_str(), 7, TABLE_FLAGS, GetContentRegionAvail()))
+            if (BeginTable(std::string("##Table_" + myLabel).c_str(), 7, table_flags, GetContentRegionAvail()))
             {
                 for (const auto& day : DAYS)
                     TableSetupColumn(day.c_str(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoHeaderWidth, 30.0f);
