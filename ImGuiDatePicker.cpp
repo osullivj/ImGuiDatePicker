@@ -131,16 +131,6 @@ namespace ImGui
         return res;
     }
 
-    /* constexpr static tm EncodeTimePoint(int dayOfMonth, int month, int year) noexcept
-    {
-        tm res{ };
-        res.tm_isdst = -1;
-        SET_DAY(res, dayOfMonth);
-        SET_MONTH(res, month);
-        SET_YEAR(res, year);
-
-        return res;
-    } */
 
     inline static std::string TimePointToLongString(int ymd[3]) noexcept
     {
@@ -151,13 +141,6 @@ namespace ImGui
         return std::string(day + " " + month + " " + year);
     }
 
-    /* inline static tm Today() noexcept
-    {
-        std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-        std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-
-        return *std::gmtime(&currentTime);
-    } */
 
     inline void PreviousMonth(int ymd[3]) noexcept
     {
@@ -246,14 +229,14 @@ namespace ImGui
         if (window->SkipItems)
             return false;
 
-        bool hiddenLabel = label.substr(0, 2) == "##";
-        std::string myLabel = (hiddenLabel) ? label.substr(2) : label;
+        bool isHiddenLabel = label.substr(0, 2) == "##";
+        std::string myLabel = isHiddenLabel ? label.substr(2) : label;
 
-        if (!hiddenLabel)
+        /** if (!hiddenLabel)
         {
             Text(label.c_str());
             SameLine((itemSpacing == 0.0f) ? 0.0f : GetCursorPos().x + itemSpacing);
-        }
+        } */
 
         if (clampToBorder)
             SetNextItemWidth(GetContentRegionAvail().x);
@@ -261,14 +244,18 @@ namespace ImGui
         const ImVec2 windowSize = ImVec2(table_size[0], table_size[1]);
         SetNextWindowSize(windowSize);
 
-        if (BeginCombo(std::string("##" + myLabel).c_str(), TimePointToLongString(ymd).c_str()))
+        std::string top_label("##");
+        top_label += myLabel;
+        if (BeginCombo(top_label.c_str(), TimePointToLongString(ymd).c_str()))
         {
             int monthIdx = GET_MONTH_IDX(ymd);
             int year = GET_YEAR(ymd);
 
             PushItemWidth((GetContentRegionAvail().x * 0.5f));
 
-            if (ComboBox("##CmbMonth_" + myLabel, MONTHS, monthIdx, altFont))
+            std::string month_label("##CmbMonth_");
+            month_label += myLabel;
+            if (ComboBox(month_label.c_str(), MONTHS, monthIdx, altFont))
             {
                 ymd[1] = monthIdx + 1;
                 res = true;
@@ -278,7 +265,9 @@ namespace ImGui
             SameLine();
             PushItemWidth(GetContentRegionAvail().x);
 
-            if (InputInt(std::string("##IntYear_" + myLabel).c_str(), &year))
+            std::string year_label("##IntYear_");
+            year_label += myLabel;
+            if (InputInt(year_label.c_str(), &year))
             {
                 ymd[0] = std::min(std::max(IMGUI_DATEPICKER_YEAR_MIN, year), IMGUI_DATEPICKER_YEAR_MAX);
                 res = true;
@@ -336,7 +325,9 @@ namespace ImGui
             EndDisabled();
             PopStyleColor(2);
             PopStyleVar();
+            
 
+            
             /* now supplied in table_flags param
             constexpr ImGuiTableFlags TABLE_FLAGS = ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingFixedFit |
                 ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_NoHostExtendY; */
@@ -398,6 +389,7 @@ namespace ImGui
             }
 
             EndCombo();
+
         }
 
         return res;
