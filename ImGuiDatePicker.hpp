@@ -2,6 +2,10 @@
 #include <imgui.h>
 #include <string>
 
+// This DatePicker impl has is forked from DnA-IntRicate's original
+// DatePicker API has been adapted to play better with emscripten
+// Thanks Adam!
+// https://github.com/DnA-IntRicate/ImGuiDatePicker
 
 #ifndef IMGUI_DATEPICKER_YEAR_MIN
     #define IMGUI_DATEPICKER_YEAR_MIN 1900
