@@ -206,25 +206,25 @@ bool DatePicker(const char* clabel, int ymd[3], float table_size[2], bool clampT
         int monthIdx = GET_MONTH_IDX(ymd);
         int year = GET_YEAR(ymd);
 
-        PushItemWidth((GetContentRegionAvail().x * 0.5f));
+        // PushItemWidth((GetContentRegionAvail().x * 0.5f));
         std::string month_label("##CmbMonth_");
         month_label += myLabel;
         if (ComboBox(month_label.c_str(), MONTHS, monthIdx)) {
             ymd[1] = monthIdx + 1;
             res = true;
         }
-        PopItemWidth();
+        // PopItemWidth();
 
-        SameLine();
+        // SameLine();
 
-        PushItemWidth(GetContentRegionAvail().x);
+        // PushItemWidth(GetContentRegionAvail().x);
         std::string year_label("##IntYear_");
         year_label += myLabel;
         if (InputInt(year_label.c_str(), &year)) {
             ymd[0] = std::min(std::max(IMGUI_DATEPICKER_YEAR_MIN, year), IMGUI_DATEPICKER_YEAR_MAX);
             res = true;
         }
-        PopItemWidth();
+        // PopItemWidth();
 
         const float contentWidth = GetContentRegionAvail().x;
         const float arrowSize = GetFrameHeight();
@@ -308,8 +308,7 @@ bool DatePicker(const char* clabel, int ymd[3], float table_size[2], bool clampT
                             PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
                         }
 
-                        if (Button(std::to_string(day).c_str(), ImVec2(GetContentRegionAvail().x, 
-                                                        GetTextLineHeightWithSpacing() + 5.0f))) {
+                        if (Button(std::to_string(day).c_str(), ImVec2(0.0, 0.0))) {
                             ymd[2] = day; // v = EncodeTimePoint(day, month, year);
                             res = true;
                             CloseCurrentPopup();
