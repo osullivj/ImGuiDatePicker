@@ -25,7 +25,7 @@
 
 namespace ImGui
 {
-    IMGUI_API bool DatePicker(const char* label, int ymd[3], float tsz[2], bool clamp, ImGuiTableFlags table_flags);
+    IMGUI_API bool DatePicker(const char* label, int ymd[3], ImGuiComboFlags combo_flags, ImGuiTableFlags table_flags, void* ym_font, void* dd_font, int ym_font_size_base=0, int dd_font_size_base=0);
     IMGUI_API bool Spinner(const char* label, float radius, int thickness, int color);
     IMGUI_API bool BufferingBar(const char* label, float value,  const ImVec2& size_arg, const ImU32& bg_col, const ImU32& fg_col);
 }

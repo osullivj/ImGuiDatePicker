@@ -187,7 +187,10 @@ static bool ComboBox(const std::string& label, const std::vector<std::string>& i
     return res;
 }
 
-bool DatePicker(const char* clabel, int ymd[3], float table_size[2], bool clampToBorder, ImGuiTableFlags table_flags)
+bool DatePicker(const char* clabel, int ymd[3], 
+                ImGuiComboFlags combo_flags, ImGuiTableFlags table_flags,
+                void* ym_font, void* dd_font,
+                int ym_font_size_base, int dd_font_size_base)
 {
     bool res = false;
     std::string label( clabel);
@@ -202,10 +205,14 @@ bool DatePicker(const char* clabel, int ymd[3], float table_size[2], bool clampT
     // Combo (drop down) for date
     std::string top_label("##");
     top_label += myLabel;
-    if (BeginCombo(top_label.c_str(), TimePointToLongString(ymd).c_str())) {
+    if (BeginCombo(top_label.c_str(), TimePointToLongString(ymd).c_str(), combo_flags)) {
         int monthIdx = GET_MONTH_IDX(ymd);
         int year = GET_YEAR(ymd);
 
+        // is there a font spec for year month?
+        if (ym_font != nullptr) {
+            PushFont((ImFont*)ym_font, ym_font_size_base);
+        }
         std::string month_label("##CmbMonth_");
         month_label += myLabel;
         if (ComboBox(month_label.c_str(), MONTHS, monthIdx)) {
@@ -218,6 +225,9 @@ bool DatePicker(const char* clabel, int ymd[3], float table_size[2], bool clampT
         if (InputInt(year_label.c_str(), &year)) {
             ymd[0] = std::min(std::max(IMGUI_DATEPICKER_YEAR_MIN, year), IMGUI_DATEPICKER_YEAR_MAX);
             res = true;
+        }
+        if (ym_font != nullptr) {
+            PopFont();
         }
 
         const float contentWidth = GetContentRegionAvail().x;
@@ -272,6 +282,11 @@ bool DatePicker(const char* clabel, int ymd[3], float table_size[2], bool clampT
         PopStyleColor(2);
         PopStyleVar();
 
+        // is there a font spec for the day date table?
+        if (dd_font != nullptr) {
+            PushFont((ImFont*)dd_font, dd_font_size_base);
+        }
+
         // Table full of DD with 7 cols for Mo, Tu, We, Th, Fr, Sa, Su and several rows for the dates
         // eg  1  2  3  4  5  6  7
         //     8  9 10 11 12 13 14
@@ -316,6 +331,9 @@ bool DatePicker(const char* clabel, int ymd[3], float table_size[2], bool clampT
                 }
             }
             EndTable();
+        }
+        if (dd_font != nullptr) {
+            PopFont();
         }
         EndCombo();
     }
